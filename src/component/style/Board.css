@@ -1,0 +1,72 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.board {
+  width: 350px;
+  height: 350px;
+  background-color: #bbada0;
+  padding: 5px;
+}
+
+.table{
+  width: inherit;
+  height: inherit;
+  display: grid;
+  grid-gap: 5px;
+}
+
+.item-container {
+  background-color: #cabeb2;
+}
+
+.item{
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  /* transition: 1s; */
+}
+
+/* .board:hover .item{
+  transform: translateY(100%)
+} */
+
+.item-2 {
+  background-color: #eeeeee;
+}
+.item-4 {
+  background-color: #eeeecc;
+}
+.item-8 {
+  background-color: #ffbb88;
+}
+.item-16 {
+  background-color: #ff9966;
+}
+.item-32 {
+  background-color: #ff7755;
+}
+
+.item-64 {
+  background-color: #ff5533;
+}
+.item-128 {
+  background-color: #eecc77;
+}
+
+.item-256 {
+  background-color: #eecc66;
+}
+
+.item-512 {
+  background-color: #eecc55;
+}
+.item-1024 {
+  background-color: #ffcc15;
+}
+
+.item-2048 {
+  background-color: #e0af0098;
+}

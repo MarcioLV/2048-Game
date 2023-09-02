@@ -1,34 +1,41 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+
+import "./style/board.css";
 
 function App() {
-  const mainTable = [
+  const [mainTable, setMainTable] = useState([
     [0, 2, 0, 0],
     [0, 2, 2, 4],
     [0, 2, 0, 2],
     [2, 4, 2, 0],
-  ];
+  ]);
+  const [transition, setTransition] = useState([]);
 
   useEffect(() => {
-    document.addEventListener("keydown", (event) => listenerKey({event, table: mainTable}));
+    document.addEventListener("keydown", (event) =>
+      listenerKey({ event, table: mainTable })
+    );
   }, []);
 
-  const listenerKey = ({event, table}) => {
-    let newTable = moveTable({ event, table });
+  useEffect(()=> {
+    console.log("effect");
+    // moveEffect(transition)
+  },[mainTable])
 
-    console.log(newTable);
-  };
+  // const moveEffect = () => {
 
-  const fillTable = ({newTable, row, rowLength}) => {
+  // }
 
-  }
+  const listenerKey = ({ event, table }) => {
+    let newTable = table.slice()
 
-
-  const moveTable = ({ event, table }) => {
-    switch (event.code) {
-      case "ArrowLeft":
-      case "Left":
-        return moveToLeft(table);
-    }
+    const moved1Table = moveTable(event, newTable);
+    // setMainTable(() => moved1Table);
+    const joinedTable = joinTable(event, moved1Table);
+    // setMainTable(() => joinedTable);
+    const moved2Table = moveTable(event, joinedTable);
+    // setMainTable(() => moved2Table);
+    console.log(moved1Table);    
   };
 
   // const createTable = ({ rowLength, colLength }) => {
@@ -40,29 +47,97 @@ function App() {
   //   return newTable;
   // };
 
+  const fillTableRow = (newTableRow, rowLength) => {
+    const newRowLength = newTableRow.length;
+    return newTableRow
+      .concat(Array(rowLength - newRowLength))
+      .fill(0, newRowLength, rowLength);
+  };
+
+  const moveTable = (event, table) => {
+    switch (event.code) {
+      case "ArrowLeft":
+      case "Left":
+        return moveToLeft(table);
+    }
+  };
+
+  const joinTable = (event, table) => {
+    switch (event.code) {
+      case "ArrowLeft":
+      case "Left":
+        return joinFromLeft(table);
+    }
+  };
+
   const moveToLeft = (table) => {
     const colLength = table.length;
     const rowLength = table[0].length;
     let newTable = [];
     for (let row = 0; row < colLength; row++) {
-      newTable.push([]);
+      newTable[row] = [];
       for (let col = 0; col < rowLength; col++) {
         let number = table[row][col];
         if (number !== 0) {
-          newTable[row].push(number);
+          let colPosition = newTable[row].push(number);
         }
       }
-      newTable[row] = newTable[row]
-      .concat(Array(rowLength - newTable[row].length))
-      .fill(0, newTable[row].length, rowLength);
+      newTable[row] = fillTableRow(newTable[row], rowLength);
+    }
+    setTransition(transition.push([0, 1], [0, 0]));
+    return newTable;
+  };
 
+  const joinFromLeft = (table) => {
+    const colLength = table.length;
+    const rowLength = table[0].length;
+    let newTable = [].concat(table)
+    for (let row = 0; row < colLength; row++) {
+      for (let col = 0; col < rowLength; col++) {
+        const number = newTable[row][col];
+        const nextNumber = newTable[row][col + 1];
+        if (number == nextNumber) {
+          newTable[row][col] *= 2;
+          newTable[row][col + 1] = 0;
+        }
+      }
     }
     return newTable;
   };
 
-  // const newTable = moveToLeft(mainTable)
+  //----BOARD-----------------------
+  const sizeRow = mainTable[0].length;
+  const sizeCol = mainTable.length;
+  const style = {
+    gridTemplate: `repeat(${sizeRow}, 1fr) / repeat(${sizeCol}, 1fr)`,
+  };
 
-  return <div>Hola mundo</div>;
+  //-----------------------------------
+
+  return (
+    <div className="board">
+      <div className="table" style={style}>
+        {mainTable.map((fila, index) => {
+          return fila.map((valor, indice) => {
+            let value = valor !== 0 ? valor : null;
+            let indiceItem = 4 * index + indice;
+            return (
+              <div className="item-container" key={indiceItem}>
+                <div
+                  className={`item item-${value}`}
+                  // style={{
+                  //   fontSize: fontSize,
+                  // }}
+                >
+                  {value}
+                </div>
+              </div>
+            );
+          });
+        })}
+      </div>
+    </div>
+  );
 }
 
 export default App;
