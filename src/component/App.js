@@ -27,15 +27,16 @@ function App() {
   // }
 
   const listenerKey = ({ event, table }) => {
-    let newTable = table.slice()
+    let newTable = copyTable(table)
 
     const moved1Table = moveTable(event, newTable);
-    // setMainTable(() => moved1Table);
-    const joinedTable = joinTable(event, moved1Table);
-    // setMainTable(() => joinedTable);
-    const moved2Table = moveTable(event, joinedTable);
-    // setMainTable(() => moved2Table);
-    console.log(moved1Table);    
+    setMainTable(moved1Table);
+
+    setTimeout(()=>{
+      const joinedTable = joinTable(event, moved1Table);
+      const moved2Table = moveTable(event, joinedTable);
+      setMainTable(() => moved2Table);
+    }, 1000)
   };
 
   // const createTable = ({ rowLength, colLength }) => {
@@ -62,6 +63,12 @@ function App() {
     }
   };
 
+  const copyTable = (table) => {
+    return table.map(fila => {
+      return fila.slice()
+    })
+  }
+
   const joinTable = (event, table) => {
     switch (event.code) {
       case "ArrowLeft":
@@ -84,14 +91,15 @@ function App() {
       }
       newTable[row] = fillTableRow(newTable[row], rowLength);
     }
-    setTransition(transition.push([0, 1], [0, 0]));
+    // setTransition(transition.push([0, 1], [0, 0]));
     return newTable;
   };
+
 
   const joinFromLeft = (table) => {
     const colLength = table.length;
     const rowLength = table[0].length;
-    let newTable = [].concat(table)
+    let newTable = copyTable(table)
     for (let row = 0; row < colLength; row++) {
       for (let col = 0; col < rowLength; col++) {
         const number = newTable[row][col];
