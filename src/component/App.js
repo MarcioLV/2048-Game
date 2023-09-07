@@ -2,14 +2,44 @@ import React, { useEffect, useState } from "react";
 
 import "./style/board.css";
 
+//Arreglar key en board
+//hace nueva funcion para mover despues de hacer join
+
 function App() {
   const [mainTable, setMainTable] = useState([
-    [0, 2, 0, 0],
-    [0, 2, 2, 4],
-    [0, 2, 0, 2],
-    [2, 4, 2, 0],
+    [
+      { value: 0, moveX: 0, moveY: 0, new: ""},
+      { value: 2, moveX: 0, moveY: 0, new: "" },
+      { value: 0, moveX: 0, moveY: 0, new: "" },
+      { value: 0, moveX: 0, moveY: 0, new: "" },
+    ],
+    [
+      { value: 0, moveX: 0, moveY: 0, new: "" },
+      { value: 2, moveX: 0, moveY: 0, new: "" },
+      { value: 2, moveX: 0, moveY: 0, new: "" },
+      { value: 4, moveX: 0, moveY: 0, new: "" },
+    ],
+    [
+      { value: 0, moveX: 0, moveY: 0, new: "" },
+      { value: 2, moveX: 0, moveY: 0, new: "" },
+      { value: 0, moveX: 0, moveY: 0, new: "" },
+      { value: 0, moveX: 0, moveY: 0, new: "" },
+    ],
+    [
+      { value: 2, moveX: 0, moveY: 0, new: "" },
+      { value: 4, moveX: 0, moveY: 0, new: "" },
+      { value: 2, moveX: 0, moveY: 0, new: "" },
+      { value: 0, moveX: 0, moveY: 0, new: "" },
+    ],
   ]);
-  const [transition, setTransition] = useState([]);
+  const [config, setConfig] = useState({
+    timeAnimation: 1000,
+  });
+  // const [transition, setTransition] = useState([]);
+
+  useEffect(() => {
+    listenerKey({ event: { code: "Left" }, table: mainTable });
+  }, []);
 
   useEffect(() => {
     document.addEventListener("keydown", (event) =>
@@ -17,26 +47,28 @@ function App() {
     );
   }, []);
 
-  useEffect(()=> {
-    console.log("effect");
-    // moveEffect(transition)
-  },[mainTable])
-
-  // const moveEffect = () => {
-
-  // }
-
   const listenerKey = ({ event, table }) => {
-    let newTable = copyTable(table)
+    let newTable = copyTable(table);
 
-    const moved1Table = moveTable(event, newTable);
-    setMainTable(moved1Table);
-
-    setTimeout(()=>{
-      const joinedTable = joinTable(event, moved1Table);
-      const moved2Table = moveTable(event, joinedTable);
-      setMainTable(() => moved2Table);
-    }, 1000)
+    const movedTable = moveTable(event, table);
+    setMainTable([].concat(table));
+    setTimeout(() => {
+      setMainTable(movedTable);
+      setTimeout(() => {
+        const joinedTable = joinTable(event, movedTable);
+        // console.log("joined", joinedTable);
+        const moved1Table = moveTable(event, joinedTable, movedTable);
+        setMainTable([].concat(movedTable));
+        setTimeout(() => {
+          setMainTable(moved1Table)
+        }, config.timeAnimation);
+      }, 20);
+    }, config.timeAnimation);
+    // console.log("moved2", moved1Table);
+    // console.log("moved", movedTable);
+    // setTimeout(() => {
+    //   setMainTable(moved1Table);
+    // }, config.timeAnimation);
   };
 
   // const createTable = ({ rowLength, colLength }) => {
@@ -48,26 +80,28 @@ function App() {
   //   return newTable;
   // };
 
+  const copyTable = (table) => {
+    return table.map((fila) => {
+      return fila.map((item) => {
+        return { ...item };
+      });
+    });
+  };
+
   const fillTableRow = (newTableRow, rowLength) => {
     const newRowLength = newTableRow.length;
     return newTableRow
       .concat(Array(rowLength - newRowLength))
-      .fill(0, newRowLength, rowLength);
+      .fill({ value: 0, moveX: 0, moveY: 0, new: "" }, newRowLength, rowLength);
   };
 
-  const moveTable = (event, table) => {
+  const moveTable = (event, table, prevTable) => {
     switch (event.code) {
       case "ArrowLeft":
       case "Left":
-        return moveToLeft(table);
+        return moveToLeft(table, prevTable);
     }
   };
-
-  const copyTable = (table) => {
-    return table.map(fila => {
-      return fila.slice()
-    })
-  }
 
   const joinTable = (event, table) => {
     switch (event.code) {
@@ -77,36 +111,47 @@ function App() {
     }
   };
 
-  const moveToLeft = (table) => {
+  const moveToLeft = (table, prevTable) => {
     const colLength = table.length;
     const rowLength = table[0].length;
     let newTable = [];
     for (let row = 0; row < colLength; row++) {
       newTable[row] = [];
       for (let col = 0; col < rowLength; col++) {
-        let number = table[row][col];
+        let number = table[row][col].value;
         if (number !== 0) {
-          let colPosition = newTable[row].push(number);
+          const newRowLength = newTable[row].push({
+            value: number,
+            moveX: 0,
+            moveY: 0,
+            new: table[row][col].new
+          });
+          const newColIndex = newRowLength - 1;
+          if (prevTable) {
+            prevTable[row][col].moveX += newColIndex - col;
+          } else {
+            table[row][col].moveX += newColIndex - col;
+          }
         }
       }
       newTable[row] = fillTableRow(newTable[row], rowLength);
     }
-    // setTransition(transition.push([0, 1], [0, 0]));
     return newTable;
   };
-
 
   const joinFromLeft = (table) => {
     const colLength = table.length;
     const rowLength = table[0].length;
-    let newTable = copyTable(table)
+    let newTable = copyTable(table);
     for (let row = 0; row < colLength; row++) {
-      for (let col = 0; col < rowLength; col++) {
-        const number = newTable[row][col];
-        const nextNumber = newTable[row][col + 1];
-        if (number == nextNumber) {
-          newTable[row][col] *= 2;
-          newTable[row][col + 1] = 0;
+      for (let col = 0; col < rowLength - 1; col++) {
+        const number = newTable[row][col].value;
+        const nextNumber = newTable[row][col + 1].value;
+        if (number !== 0 && number === nextNumber) {
+          newTable[row][col].value *= 2;
+          newTable[row][col].new = "new";
+          newTable[row][col + 1].value = 0;
+          table[row][col + 1].moveX = -1;
         }
       }
     }
@@ -125,18 +170,28 @@ function App() {
   return (
     <div className="board">
       <div className="table" style={style}>
+        {console.log(mainTable)}
         {mainTable.map((fila, index) => {
-          return fila.map((valor, indice) => {
-            let value = valor !== 0 ? valor : null;
+          return fila.map((object, indice) => {
+            let value = object.value !== 0 ? object.value : null;
             let indiceItem = 4 * index + indice;
+
+            let moveX = object.moveX * 106;
+            let transform = moveX !== 0 ? `translateX(${moveX}%)` : "none";
+            // console.log(object.value, moveX);
+            const transition = 
+            moveX !== 0 ? `${config.timeAnimation / 1000}s` : "none";
+            const newItem = object.new ? "item-new" : ""
+            let styleItem = {
+              transform: transform,
+              transition: transition,
+            };
+            if (moveX !== 0) {
+              console.log(object.value, styleItem);
+            }
             return (
               <div className="item-container" key={indiceItem}>
-                <div
-                  className={`item item-${value}`}
-                  // style={{
-                  //   fontSize: fontSize,
-                  // }}
-                >
+                <div className={`item item-${value} ${newItem}`} style={styleItem}>
                   {value}
                 </div>
               </div>

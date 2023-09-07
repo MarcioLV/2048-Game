@@ -26,11 +26,13 @@
   display: flex;
   align-items: center;
   justify-content: space-around;
-  /* transition: 1s; */
 }
 
-/* .board:hover .item{
-  transform: translateY(100%)
+.item-new{
+  transition: 5s;
+}
+/* .itemMove{
+  transform: translate(100%);
 } */
 
 .item-2 {
