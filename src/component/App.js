@@ -8,9 +8,9 @@ import "./style/board.css";
 function App() {
   const [mainTable, setMainTable] = useState([
     [
-      { value: 0, moveX: 0, moveY: 0, new: ""},
-      { value: 2, moveX: 0, moveY: 0, new: "" },
       { value: 0, moveX: 0, moveY: 0, new: "" },
+      { value: 2, moveX: 0, moveY: 0, new: "" },
+      { value: 2, moveX: 0, moveY: 0, new: "" },
       { value: 0, moveX: 0, moveY: 0, new: "" },
     ],
     [
@@ -21,15 +21,15 @@ function App() {
     ],
     [
       { value: 0, moveX: 0, moveY: 0, new: "" },
+      { value: 0, moveX: 0, moveY: 0, new: "" },
       { value: 2, moveX: 0, moveY: 0, new: "" },
-      { value: 0, moveX: 0, moveY: 0, new: "" },
-      { value: 0, moveX: 0, moveY: 0, new: "" },
+      { value: 2, moveX: 0, moveY: 0, new: "" },
     ],
     [
       { value: 2, moveX: 0, moveY: 0, new: "" },
-      { value: 4, moveX: 0, moveY: 0, new: "" },
       { value: 2, moveX: 0, moveY: 0, new: "" },
-      { value: 0, moveX: 0, moveY: 0, new: "" },
+      { value: 2, moveX: 0, moveY: 0, new: "" },
+      { value: 2, moveX: 0, moveY: 0, new: "" },
     ],
   ]);
   const [config, setConfig] = useState({
@@ -37,9 +37,9 @@ function App() {
   });
   // const [transition, setTransition] = useState([]);
 
-  useEffect(() => {
-    listenerKey({ event: { code: "Left" }, table: mainTable });
-  }, []);
+  // useEffect(() => {
+  //   listenerKey({ event: { code: "Left" }, table: mainTable });
+  // }, []);
 
   useEffect(() => {
     document.addEventListener("keydown", (event) =>
@@ -48,37 +48,17 @@ function App() {
   }, []);
 
   const listenerKey = ({ event, table }) => {
-    let newTable = copyTable(table);
-
-    const movedTable = moveTable(event, table);
+    const movedTable = joinTable(event, table);
+    if(movedTable === "error"){
+      return
+    }
     setMainTable([].concat(table));
+    console.log("table", table);
+    console.log("movedTable", movedTable);
     setTimeout(() => {
       setMainTable(movedTable);
-      setTimeout(() => {
-        const joinedTable = joinTable(event, movedTable);
-        // console.log("joined", joinedTable);
-        const moved1Table = moveTable(event, joinedTable, movedTable);
-        setMainTable([].concat(movedTable));
-        setTimeout(() => {
-          setMainTable(moved1Table)
-        }, config.timeAnimation);
-      }, 20);
     }, config.timeAnimation);
-    // console.log("moved2", moved1Table);
-    // console.log("moved", movedTable);
-    // setTimeout(() => {
-    //   setMainTable(moved1Table);
-    // }, config.timeAnimation);
   };
-
-  // const createTable = ({ rowLength, colLength }) => {
-  //   let newTable = [];
-  //   for (let row = 0; row < rowLength; row++) {
-  //     newTable[row] = Array(colLength);
-  //   }
-  //   console.log("new", newTable);
-  //   return newTable;
-  // };
 
   const copyTable = (table) => {
     return table.map((fila) => {
@@ -88,54 +68,43 @@ function App() {
     });
   };
 
-  const fillTableRow = (newTableRow, rowLength) => {
-    const newRowLength = newTableRow.length;
-    return newTableRow
-      .concat(Array(rowLength - newRowLength))
-      .fill({ value: 0, moveX: 0, moveY: 0, new: "" }, newRowLength, rowLength);
-  };
-
-  const moveTable = (event, table, prevTable) => {
-    switch (event.code) {
-      case "ArrowLeft":
-      case "Left":
-        return moveToLeft(table, prevTable);
-    }
-  };
-
   const joinTable = (event, table) => {
     switch (event.code) {
       case "ArrowLeft":
       case "Left":
         return joinFromLeft(table);
+      default:
+        return "error"
     }
   };
 
-  const moveToLeft = (table, prevTable) => {
-    const colLength = table.length;
-    const rowLength = table[0].length;
-    let newTable = [];
+  const moveToLeft = (table, newTable) => {
+    const colLength = newTable.length;
+    const rowLength = newTable[0].length;
     for (let row = 0; row < colLength; row++) {
-      newTable[row] = [];
+      let moveObject = 0;
+      let moveX = 0;
       for (let col = 0; col < rowLength; col++) {
-        let number = table[row][col].value;
-        if (number !== 0) {
-          const newRowLength = newTable[row].push({
-            value: number,
-            moveX: 0,
-            moveY: 0,
-            new: table[row][col].new
-          });
-          const newColIndex = newRowLength - 1;
-          if (prevTable) {
-            prevTable[row][col].moveX += newColIndex - col;
-          } else {
-            table[row][col].moveX += newColIndex - col;
+        let object = newTable[row][col];
+        if (object.value !== 0) {
+          if (moveObject !== 0) {
+            //cambiar la posicion del valor en newTable
+            newTable[row][col - moveObject] = { ...object };
+            newTable[row][col] = { value: 0, moveX: 0, moveY: 0, new: "" };
+            //cambiar la moveX en table en todos los valores que le siguen
+            for (let index = col; index < rowLength; index++) {
+              table[row][index].moveX -= moveX;
+            }
           }
+          moveX = 0;
+        } else {
+          moveX += 1;
+          moveObject += 1;
         }
       }
-      newTable[row] = fillTableRow(newTable[row], rowLength);
+      // newTable[row] = fillTableRow(newTable[row], rowLength);
     }
+    // return joinFromLeft(table, newTable);
     return newTable;
   };
 
@@ -151,11 +120,11 @@ function App() {
           newTable[row][col].value *= 2;
           newTable[row][col].new = "new";
           newTable[row][col + 1].value = 0;
-          table[row][col + 1].moveX = -1;
+          table[row][col + 1].moveX -= 1;
         }
       }
     }
-    return newTable;
+    return moveToLeft(table, newTable);
   };
 
   //----BOARD-----------------------
@@ -179,19 +148,22 @@ function App() {
             let moveX = object.moveX * 106;
             let transform = moveX !== 0 ? `translateX(${moveX}%)` : "none";
             // console.log(object.value, moveX);
-            const transition = 
-            moveX !== 0 ? `${config.timeAnimation / 1000}s` : "none";
-            const newItem = object.new ? "item-new" : ""
-            let styleItem = {
-              transform: transform,
-              transition: transition,
-            };
-            if (moveX !== 0) {
-              console.log(object.value, styleItem);
-            }
+            const transition =
+              moveX !== 0 ? `${config.timeAnimation / 1000}s` : "none";
+            // const newItem = object.new ? "item-new" : "";
+            let styleItem =
+              transition === "none"
+                ? {}
+                : {
+                    transform: transform,
+                    transition: transition,
+                  };
+            // if (moveX !== 0) {
+            //   console.log(object.value, styleItem);
+            // }
             return (
               <div className="item-container" key={indiceItem}>
-                <div className={`item item-${value} ${newItem}`} style={styleItem}>
+                <div className={`item item-${value}`} style={styleItem}>
                   {value}
                 </div>
               </div>
